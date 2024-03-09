@@ -1,5 +1,7 @@
 # Path setup, and access the config.yml file, datasets folder & trained models
 import sys
+sys.path.append("j:\\AIMLOPS\\M4_MLOPS\\Long_Quiz_Part_B\\1\\EC2_Implementation\\mini_project_1")
+sys.path.append("j:\\AIMLOPS\\M4_MLOPS\\Long_Quiz_Part_B\\1\\EC2_Implementation\\mini_project_1\\titanic_model")
 from pathlib import Path
 file = Path(__file__).resolve()
 parent, root = file.parent, file.parents[1]
@@ -9,6 +11,7 @@ from typing import Dict, List
 from pydantic import BaseModel
 from strictyaml import YAML, load
 
+import yaml
 import titanic_model
 
 # Project Directories
@@ -26,7 +29,6 @@ class AppConfig(BaseModel):
     """
     Application-level config.
     """
-
     package_name: str
     training_data_file: str
     test_data_file: str
@@ -70,15 +72,14 @@ def find_config_file() -> Path:
     raise Exception(f"Config not found at {CONFIG_FILE_PATH!r}")
 
 
-def fetch_config_from_yaml(cfg_path: Path = None) -> YAML:
+def fetch_config_from_yaml(cfg_path: Path = None) -> dict:
     """Parse YAML containing the package configuration."""
-
     if not cfg_path:
         cfg_path = find_config_file()
 
     if cfg_path:
         with open(cfg_path, "r") as conf_file:
-            parsed_config = load(conf_file.read())
+            parsed_config = yaml.safe_load(conf_file)
             return parsed_config
     raise OSError(f"Did not find config file at path: {cfg_path}")
 
@@ -87,14 +88,13 @@ def create_and_validate_config(parsed_config: YAML = None) -> Config:
     """Run validation on config values."""
     if parsed_config is None:
         parsed_config = fetch_config_from_yaml()
-
+    #print(parsed_config)
     # specify the data attribute from the strictyaml YAML type.
     _config = Config(
-        app_config=AppConfig(**parsed_config.data),
-        model_config=ModelConfig(**parsed_config.data),
+        app_config=AppConfig(**parsed_config),
+        model_config=ModelConfig(**parsed_config),
     )
 
     return _config
-
 
 config = create_and_validate_config()
